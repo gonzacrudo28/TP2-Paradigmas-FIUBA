@@ -10,12 +10,9 @@ import scala.annotation.tailrec
 // ((λx.λy.x) y)  -> APP(LAMBDA(x,LAMBDA(y,VAR(x))),VAR(y))
 // λx.λx.((y x) z) -> LAMBDA(x,LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(z))))
 // λf.(f (λx.λy.x)) -> LAMBDA(f,APP(VAR(f),LAMBDA(x,LAMBDA(y,VAR(x)))))
-// (λx.λy.λf.((f x) y) a) b -> APP(APP(APP(LAMBDA(x,LAMBDA(y,LAMBDA(f,APP(APP(VAR(f),VAR(x)),VAR(y))))),VAR(a)),VAR(b))
-
-//λx.λy.λf.((((f x) y) a) b)  --> BUCLE INFINITO  ARREGLAR
-
-
-//(((f x) y) a) b
+// ((λx.λy.λf.((f x) y)) a)  -> APP(LAMBDA(x,LAMBDA(y,LAMBDA(f,APP(APP(VAR(f),VAR(x)),VAR(y))))),VAR(a))
+//λx.λy.λf.((((f x) y) a) b)  --> LAMBDA(x,LAMBDA(y,LAMBDA(f,APP(APP(APP(APP(VAR(f),VAR(x)),VAR(y)),VAR(a)),VAR(b)))))
+//((((f x) y) a) b) -->  APP(APP(APP(APP(VAR(f),VAR(x)),VAR(y)),VAR(a)),VAR(b))
 /*
 
 def verificarParentesisAfuera(tokens: List[CalculoLambda]) : List[CalculoLambda]  = tokens match{
@@ -24,10 +21,8 @@ def verificarParentesisAfuera(tokens: List[CalculoLambda]) : List[CalculoLambda]
 
   case _ => tokens
 }*/
-
-//((λx.λy.(y x)) x)
-//(λx.λy.((y x) x))   => λx.λy.((y x) x)
-//(x (λx.λy.(y x)))
+// ((λx.λy.λf.((f x) y)) a)
+// (a (λx.λy.λf.((f x) y)))
 def parsear2(tokens: List[CalculoLambda]): CalculoLambda = tokens match {
   case Nil => NIL()
   case x :: xs if x == LAMBDAstr() => abstraerExp(tokens)
@@ -50,20 +45,34 @@ def abstraerExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match{
 def aplicarExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match {
   case Nil => NIL()
   case VAR(_) :: Nil => lambdas.head
+  case x :: xs if x == LPAR() && xs.head == LPAR() =>
+    APP(parsear2(lambdas.take(buscarSpaceConParentesis(lambdas))), (parsear2(lambdas.drop(buscarSpaceConParentesis(lambdas)+1))))
   case x :: xs if x == LPAR()  =>
-    println(lambdas)
-    APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
+    APP(parsear2(lambdas.take(buscarSpaceConParentesis(lambdas))), (parsear2(lambdas.drop(buscarSpaceConParentesis(lambdas)+1))))
+    /*APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))))*/
   case _ =>
-    APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
+    APP(parsear2(lambdas.take(buscarSpaceConParentesis(lambdas))), (parsear2(lambdas.drop(buscarSpaceConParentesis(lambdas)+1))) )
+    /*APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))))*/
 }
 //List(VAR(y), SPACE(), VAR(x), RPAR(), SPACE(), VAR(x))
 
+@tailrec
+def buscarSpaceConParentesis(expresion : List[CalculoLambda], contadorEspacio : Int = 0,contadorLPAR: Int = 0, contadorRPAR: Int = 0):Int =  expresion match {
+  case x :: xs if x == LPAR() =>
+    buscarSpaceConParentesis(expresion.drop(1), contadorEspacio+ 1, contadorLPAR + 1, contadorRPAR)
+  case x :: xs if x == RPAR() =>
+    buscarSpaceConParentesis(expresion.drop(1), contadorEspacio+ 1, contadorLPAR, contadorRPAR + 1)
+  case x :: xs if x == SPACE() && contadorLPAR == contadorRPAR => contadorEspacio
+  case _ => buscarSpaceConParentesis(expresion.drop(1), contadorEspacio + 1, contadorLPAR, contadorRPAR)
+}
+
+/* FUNCION QUE BUSCA EL SPACE QUE SEPARA DOS EXPRESIONES
 @tailrec
 def buscarSpace(expresion : List[CalculoLambda], contador : Int = 0):Int =  expresion match {
   case x :: xs if x == SPACE() => contador
   case x :: xs if x == LPAR() => buscarSpace(expresion.drop(lengthExp(expresion)), contador + lengthExp(expresion))
   case _ => buscarSpace(expresion.drop(1), contador + 1)
-}
+}*/
 
 @tailrec
 def lengthExp(expression: List[CalculoLambda], contador: Int=0): Int = expression match{
