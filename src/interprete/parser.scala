@@ -5,6 +5,10 @@ import modelo.*
 import scala.annotation.tailrec
 
 
+//casos para probar -> (λx.λx.(y x) z)
+//(λf.(f λx.λy.x) ((λx.λy.λf.((f x) y) a) b))
+//(λx.λy.x y)
+//(λx.λy.y (λx.(x x) λx.(x x)))
 
 //
 //def parsear (tokens :List[CalculoLambda]) :CalculoLambda = tokens match {
@@ -17,12 +21,23 @@ import scala.annotation.tailrec
 //  case VAR(name) :: Nil => VAR(name)
 //}
 
+ // (x (x y))
 
+ // hay algunos casos q rompe como: (λx.λy.y (λx.(x x) λx.(x x)))
+def verificarParentesisAfuera(tokens: List[CalculoLambda]) : List[CalculoLambda]  = tokens match{
+  case x :: xs if x == LPAR() && xs.head ==  LAMBDAstr() && xs.last == RPAR() =>
+    tokens.drop(1).dropRight(1)
 
+  case _ => tokens
+}
 
+//((λx.λy.(y x)) x)
+//(λx.λy.((y x) x))   => λx.λy.((y x) x)
+//(x (λx.λy.(y x)))
 def parsear2(tokens: List[CalculoLambda]): CalculoLambda = tokens match {
   case Nil => NIL()
   case x :: xs if x == LAMBDAstr() => abstraerExp(tokens)
+  case x :: xs if x == LPAR() && xs.head == LAMBDAstr() => abstraerExp(tokens.drop(1).dropRight(1))
   case x :: xs if x == LPAR() => aplicarExp(tokens.drop(1).dropRight(1))
   case VAR(_) :: Nil => tokens.head
   case _ => parsear2(tokens.drop(1))
@@ -37,14 +52,16 @@ def abstraerExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match{
 //(λx.λy.y (λx.(x x) λx.(x x))) -> λx.λy.y (λx.(x x) λx.(x x)) -> Si tengo una VAR seguida de un SPACE -> Analizo los
 // parentesis de lo que sigue -> Estan cerrados? -> Si, tengo una APP(Hasta el Space, Space en adelante)
 
-@tailrec
+// (λx.λy.y (λx.(x x) λx.(x x)))
 def aplicarExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match {
   case Nil => NIL()
   case VAR(_) :: Nil => lambdas.head
-  case x :: xs if x == LPAR() => aplicarExp(lambdas.drop(1).dropRight(1))
-  case _ => APP(parsear2(lambdas.take(buscarSpace(lambdas))),
-            (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
+  case x :: xs if x == LPAR()  =>
+    APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
+  case _ =>
+    APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
 }
+//List(VAR(y), SPACE(), VAR(x), RPAR(), SPACE(), VAR(x))
 
 @tailrec
 def buscarSpace(expresion : List[CalculoLambda], contador : Int = 0):Int =  expresion match {
@@ -81,87 +98,7 @@ def lengthExp(expression: List[CalculoLambda], contador: Int=0): Int = expressio
 
 // (λx.λy.(y x) x)
 //(λx x)
-/*
-def parsear(tokens: List[CalculoLambda]): CalculoLambda = tokens match {
-  case Nil => NIL()
-  case LAMBDAstr() :: VAR(name) :: DOT() :: tail => LAMBDA(name, parsear(tail))
-  case LPAR() :: tail => parsearApp(tail, Nil, Nil, false, false)
-  case RPAR() :: tail => parsear(tail)
-  case VAR(name) :: tail => parsear(tail)
-  case SPACE() :: tail => parsear(tail)
-}
 
-@tailrec
-def parsearApp(tokens: List[CalculoLambda], listaIzquierda: List[CalculoLambda], listaDerecha: List[CalculoLambda], leyoEspacio: Boolean, leyoParentesis: Boolean): CalculoLambda = tokens match {
-  case Nil => APP(parsear(listaIzquierda.reverse), parsear(listaDerecha.reverse))
-  case SPACE() :: tail if !leyoEspacio && !leyoParentesis =>
-    listaIzquierda :+ SPACE()
-    parsearApp(tail, listaIzquierda, listaDerecha, true, false)
-  case SPACE() :: tail if !leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ SPACE()
-    parsearApp(tail, listaIzquierda, listaDerecha, true, true)
-  case SPACE() :: tail if leyoEspacio && !leyoParentesis =>
-    listaDerecha :+ SPACE()
-    parsearApp(tail, listaIzquierda, listaDerecha, true, false)
-  case SPACE() :: tail if leyoEspacio && leyoParentesis =>
-    listaDerecha :+ SPACE()
-    parsearApp(tail, listaIzquierda, listaDerecha, true, true)
-
-  case VAR(name) :: tail if !leyoEspacio && !leyoParentesis =>
-    listaIzquierda :+ VAR(name)
-    parsearApp(tail, listaIzquierda, listaDerecha, false, false)
-  case VAR(name) :: tail if !leyoEspacio && leyoParentesis =>
-    listaDerecha :+ VAR(name)
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case VAR(name) :: tail if leyoEspacio && leyoParentesis =>
-    listaDerecha :+ VAR(name)
-    parsearApp(tail, listaIzquierda, listaDerecha, true, true)
-  case VAR(name) :: tail if leyoEspacio && !leyoParentesis =>
-    listaDerecha :+ VAR(name)
-    parsearApp(tail, listaIzquierda, listaDerecha, true, false)
-
-  case LAMBDAstr() :: tail if !leyoEspacio && !leyoParentesis =>
-    listaIzquierda :+ LAMBDAstr()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, false)
-  case LAMBDAstr() :: tail if !leyoEspacio && leyoParentesis =>
-    listaDerecha :+ LAMBDAstr()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case LAMBDAstr() :: tail if leyoEspacio && !leyoParentesis =>
-    listaDerecha :+ LAMBDAstr()
-    parsearApp(tail, listaIzquierda, listaDerecha, true, false)
-  case LAMBDAstr() :: tail if leyoEspacio && leyoParentesis =>
-    listaDerecha :+ LAMBDAstr()
-    parsearApp(tail, listaIzquierda, listaDerecha, true, true)
-
-  case LPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ LPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case LPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ LPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case LPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ LPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case LPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ LPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-
-  case RPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ RPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case RPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ RPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case RPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ RPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-  case RPAR() :: tail if leyoEspacio && leyoParentesis =>
-    listaIzquierda :+ RPAR()
-    parsearApp(tail, listaIzquierda, listaDerecha, false, true)
-
-}
-
-*/
 
 
 /*

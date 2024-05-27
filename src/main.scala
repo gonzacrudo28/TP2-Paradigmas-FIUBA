@@ -12,7 +12,7 @@ object Main {
     while (input != null) {
       val ecuacionParseada = leerCalculoLambda(input)
       println("Expresion" + ecuacionParseada)
-      val expresion = parsear2(ecuacionParseada)
+      val expresion = parsear2(verificarParentesisAfuera(ecuacionParseada))
       println("pARSER:  " + expresion)
       //val resultado = procesar(expresion)
       //printf("Resultado = %f \n", resultado)
