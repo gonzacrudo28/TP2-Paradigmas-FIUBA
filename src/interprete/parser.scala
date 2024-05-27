@@ -5,31 +5,25 @@ import modelo.*
 import scala.annotation.tailrec
 
 
-//casos para probar -> (λx.λx.(y x) z)
-//(λf.(f λx.λy.x) ((λx.λy.λf.((f x) y) a) b))
-//(λx.λy.x y)
-//(λx.λy.y (λx.(x x) λx.(x x)))
-
+//CASOS Y SALIDAS:
 //
-//def parsear (tokens :List[CalculoLambda]) :CalculoLambda = tokens match {
-//  case Nil => NIL()
-//  case LAMBDAstr() :: VAR(name) :: tail if tail.nonEmpty => LAMBDA(name,parsear(tail))
-//  case DOT() :: tail => parsear(tail)
-//  case SPACE() :: tail => parsear(tail)
-//  case LPAR() :: tail => APP(parsear(tail.slice(0,1)),parsear(tail.slice(2,tail.indexOf(RPAR()))))
-//  case VAR(name) :: tail if tail.nonEmpty => parsear(tail)
-//  case VAR(name) :: Nil => VAR(name)
-//}
+// ((λx.λy.x) y)  -> APP(LAMBDA(x,LAMBDA(y,VAR(x))),VAR(y))
+// λx.λx.((y x) z) -> LAMBDA(x,LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(z))))
+// λf.(f (λx.λy.x)) -> LAMBDA(f,APP(VAR(f),LAMBDA(x,LAMBDA(y,VAR(x)))))
+// (λx.λy.λf.((f x) y) a) b -> APP(APP(APP(LAMBDA(x,LAMBDA(y,LAMBDA(f,APP(APP(VAR(f),VAR(x)),VAR(y))))),VAR(a)),VAR(b))
 
- // (x (x y))
+//λx.λy.λf.((((f x) y) a) b)  --> BUCLE INFINITO  ARREGLAR
 
- // hay algunos casos q rompe como: (λx.λy.y (λx.(x x) λx.(x x)))
+
+//(((f x) y) a) b
+/*
+
 def verificarParentesisAfuera(tokens: List[CalculoLambda]) : List[CalculoLambda]  = tokens match{
   case x :: xs if x == LPAR() && xs.head ==  LAMBDAstr() && xs.last == RPAR() =>
     tokens.drop(1).dropRight(1)
 
   case _ => tokens
-}
+}*/
 
 //((λx.λy.(y x)) x)
 //(λx.λy.((y x) x))   => λx.λy.((y x) x)
@@ -57,6 +51,7 @@ def aplicarExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match {
   case Nil => NIL()
   case VAR(_) :: Nil => lambdas.head
   case x :: xs if x == LPAR()  =>
+    println(lambdas)
     APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
   case _ =>
     APP(parsear2(lambdas.take(buscarSpace(lambdas))), (parsear2(lambdas.drop(buscarSpace(lambdas)+1))) )
@@ -90,14 +85,6 @@ def lengthExp(expression: List[CalculoLambda], contador: Int=0): Int = expressio
 // var sola -> var
 //Expresion  LAMBDAexp(x,LAMBDAexp(y,APP(VAR(x),VAR(y)))) ACA
 
-// (λx.λy.(y x) x)
-/*
-  λx.λy.(y x) x
-
- */
-
-// (λx.λy.(y x) x)
-//(λx x)
 
 
 
