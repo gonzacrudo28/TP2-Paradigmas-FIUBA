@@ -66,20 +66,22 @@ def buscarSpaceConParentesis(expresion : List[CalculoLambda], contadorEspacio : 
   case _ => buscarSpaceConParentesis(expresion.drop(1), contadorEspacio + 1, contadorLPAR, contadorRPAR)
 }
 
-/* FUNCION QUE BUSCA EL SPACE QUE SEPARA DOS EXPRESIONES
+/* AMBAS FUNCIONES BUSCARSPACE FUNCIONAN
 @tailrec
-def buscarSpace(expresion : List[CalculoLambda], contador : Int = 0):Int =  expresion match {
+  def buscarSpace(expresion : List[CalculoLambda], contador : Int = 0):Int =  expresion match {
   case x :: xs if x == SPACE() => contador
   case x :: xs if x == LPAR() => buscarSpace(expresion.drop(lengthExp(expresion)), contador + lengthExp(expresion))
   case _ => buscarSpace(expresion.drop(1), contador + 1)
-}*/
+}
 
 @tailrec
-def lengthExp(expression: List[CalculoLambda], contador: Int=0): Int = expression match{
-  case x :: xs if x ==RPAR() => contador + 1
-  case x :: xs => lengthExp(xs, contador + 1)
+def lengthExp(expression: List[CalculoLambda], contador: Int=0, parentesisIzq : Int = 0): Int = expression match{
+  case x :: xs if x == LPAR() => lengthExp(xs, contador + 1, parentesisIzq + 1)
+  case x :: xs if x ==RPAR() && parentesisIzq == 1 => contador + 1
+  case x :: xs if x ==RPAR() && parentesisIzq > 1=> lengthExp(xs, contador + 1, parentesisIzq - 1)
+  case x :: xs => lengthExp(xs, contador + 1, parentesisIzq)
   case Nil => contador
-}
+}*/
 
 //APP(f: CalculoLambda, v: CalculoLambda)
 
