@@ -1,16 +1,19 @@
 package Main
 
-import interprete._
-import lexer._
-import reductor._
+import interprete.*
+import lexer.*
+import reductor.*
+
 import java.util.Scanner
+import Estados.*
+import modelo.CalculoLambda
+
 import scala.io.StdIn.readLine
 
 object Main {
   def main(args: Array[String]) = {
-
-
     var input: String = readLine
+    val estado = CBN
     val listaPrueba = List[String](
       "λx.((x y) λz.(x z))",
       "(x λz.(x λw.((w z) y)))",
@@ -29,21 +32,20 @@ object Main {
     //       ""
     //     )
 
+    var expresion = ""
+    //var expresionParseada = CalculoLambda()
+    while (input != "exit") {
+ //     input match {
+//        case "set free-variables" => estado = FV
+//        case "set call-by-value" => estado = CBV
+//        case "set call-by-name" => estado = CBN
+//        case x if x.contains('λ') =>
+//          expresionParseada = parsear(leerCalculoLambda(input))
+//          println("Expresion: " + expresionParseada)
+//        case _ =>
+          //println("Expresion: " + desparsear(CalculoLambda(input)))
+//      }
 
-    //    for (i <- 0 to listaPrueba.length - 1) {
-    //      println("Expresion: " + listaPrueba(i))
-    //      val ecuacionParseada = leerCalculoLambda(listaPrueba(i))
-    //      println("Expresion" + ecuacionParseada)
-    //      val expresion = parsear(ecuacionParseada)
-    //      println("Parsear: " + expresion)
-    //      println("Desparsear " + desparsear(expresion))
-    //      val variables = variablesLibres(expresion, List(), List())
-    //      println("Libres: " + variables._1 + " Ligadas: " + variables._2)
-    //      val sustitucionExpresion = sustitucion(expresion)
-    //      println("Sustitucion: " + sustitucionExpresion)
-    //    }
-
-    while (input != null) {
       val ecuacionParseada = leerCalculoLambda(input)
       println("Expresion" + ecuacionParseada)
       val expresion = parsear(ecuacionParseada)
@@ -62,5 +64,5 @@ object Main {
 
       input = readLine
     }
-  }
+}
 }

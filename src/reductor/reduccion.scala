@@ -31,12 +31,7 @@ def sustitucion(expresion: CalculoLambda): CalculoLambda = {
 }
 
 
-def repetidos(expresion: CalculoLambda, ligadas: List[String]): List[String] = expresion match {
-  case LAMBDA(name, body) => repetidos(body, ligadas)
-  case VAR(name) if !ligadas.contains(name) => List(name)
-  case VAR(name) => List()
-  case APP(exp1, exp2) => repetidos(exp1, ligadas) ++ repetidos(exp2, ligadas)
-}
+
 
 def cambiarRepetidas(lambda: CalculoLambda, libres: List[String], ligadas: List[String]): CalculoLambda = lambda match {
   case LAMBDA(name, body) if libres.contains(name) && ligadas.contains(name) =>
@@ -56,6 +51,7 @@ def cambiarNombre(lambda: CalculoLambda, viejo: String, original: String): Calcu
 
 
 //SI TENGO UNA APP Y DE CADA LADO TENGO VARIABLES REPETIDAS ENTONCES TENGO QUE RENOMBRARLAS
+
 
 def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
   val (libres, ligadas) = variablesLibres(expresion, List(), List())
@@ -93,6 +89,14 @@ def actualizarRepetidas(repetidas: Map[String, Int], name: String): Map[String, 
     case 1 => repetidas - name
     case _ => repetidas.updated(name, cantidad - 1)
 }
+
+def repetidos(expresion: CalculoLambda, ligadas: List[String]): List[String] = expresion match {
+  case LAMBDA(name, body) => repetidos(body, ligadas)
+  case VAR(name) if !ligadas.contains(name) => List(name)
+  case VAR(name) => List()
+  case APP(exp1, exp2) => repetidos(exp1, ligadas) ++ repetidos(exp2, ligadas)
+}
+
 
 /*def reductorCallByName(expresion: CalculoLambda) = expresion match {
   case APP(exp1, exp2) => reemplazarCBN(exp1, exp2)
