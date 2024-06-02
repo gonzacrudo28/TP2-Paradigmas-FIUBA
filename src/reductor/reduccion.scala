@@ -2,34 +2,20 @@ package reductor
 
 import modelo._
 
-
 //("VARIABLES" + variablesLibres1(LAMBDA("f", LAMBDA("x", APP(APP(VAR("y"), VAR("y")), VAR("z"))))))
 //ME FALTA EL CASO DONDE HAY VARIABLE DOS VECES UNA LIBRE Y OTRA LIGADA
-
 
 val libres = List()
 val ligadas = List()
 
-//    println("λf.λx.((y y) z) ------->" + variablesLibres(LAMBDA("f",LAMBDA("x",APP(APP(VAR("y"), VAR("y")),VAR("z")))),libres,ligadas))
-//    println("λf.λx.(f y) ------->" + variablesLibres(LAMBDA("f",LAMBDA("x",APP(VAR("f"), VAR("y")))),libres,ligadas))
-//    println("((λx.(y y)) x) ------->" + variablesLibres(APP(LAMBDA("x",APP(VAR("y"),VAR("y"))),VAR("x")),libres,ligadas))
-//    println("λx.((x y) (λz.(x z))) ------->" + variablesLibres(LAMBDA("x",APP(APP(VAR("x"),VAR("y")),LAMBDA("z",APP(VAR("x"),VAR("z"))))),libres,ligadas))
-//    println("x(λz.(x (λw.((w z) y)))) ------->" + variablesLibres(APP(VAR("x"),LAMBDA("z",APP(VAR("x"),LAMBDA("w",APP(APP(VAR("w"),VAR("z")),VAR("y")))))),libres,ligadas))
-//    println("SUSTITUCION ((λx.(y y)) x) -> " + sustitucion(APP(LAMBDA("x",APP(VAR("y"),VAR("y"))),VAR("x"))))
-//    println("SUSTITUCION λf.λx.(f y) -> " + sustitucion(LAMBDA("f",LAMBDA("x",APP(VAR("f"), VAR("y"))))))
-//    println("SUSTITUCION λf.λx.((y y) z) -> " + sustitucion(LAMBDA("f",LAMBDA("x",APP(APP(VAR("y"), VAR("y")),VAR("z"))))))
-//    println("SUSTITUCION λx. ((x y) λz. (x z)) -> " + sustitucion(LAMBDA("x",APP(APP(VAR("x"),VAR("y")),LAMBDA("z",APP(VAR("x"),VAR("z")))))))
-//    println("SUSTITUCION x(λz.(x (λw.((w z) y)))) -> " + sustitucion(APP(VAR("x"),LAMBDA("z",APP(VAR("x"),LAMBDA("w",APP(APP(VAR("w"),VAR("z")),VAR("y"))))))))
 //println("REPETIDOS λx.x -> " + conversionAlfa(LAMBDA("x",VAR("x"))))
 //println("REPETIDOS λx.λx.x -> " + conversionAlfa(LAMBDA("x",LAMBDA("x",VAR("x")))))
 //println("x(λz.(x (λw.((w z) y)))) ------->" + conversionAlfa(APP(VAR("x"),LAMBDA("z",APP(VAR("x"),LAMBDA("w",APP(APP(VAR("w"),VAR("z")),VAR("y"))))))))
 //println("(λy.(x y) y) ------->" + conversionAlfa(APP(LAMBDA("y", APP(VAR("x"), VAR("y"))), VAR("y"))))
 
-
-//(λx.(y y) x)
 def variablesLibres(expresion: CalculoLambda, libres: List[String], ligadas: List[String]): (List[String], List[String]) = expresion match {
   case LAMBDA(name, body) =>
-    val nLigadas = ligadas :+ name
+    val nLigadas = if (!ligadas.contains(name)) ligadas :+ name else ligadas
     variablesLibres(body, libres, nLigadas)
   case VAR(name) if !ligadas.contains(name) && !libres.contains(name) => (libres :+ name, ligadas)
   case VAR(name) => (libres, ligadas)
@@ -38,7 +24,6 @@ def variablesLibres(expresion: CalculoLambda, libres: List[String], ligadas: Lis
     val (libres2, ligadas2) = variablesLibres(exp2, libres, ligadas)
     ((libres1 ++ libres2).distinct, (ligadas1 ++ ligadas2).distinct)
 }
-
 
 def sustitucion(expresion: CalculoLambda): CalculoLambda = {
   val (libres, ligadas) = variablesLibres(expresion, List(), List())
@@ -52,28 +37,32 @@ def repetidos(expresion: CalculoLambda, ligadas: List[String]): List[String] = e
   case VAR(name) => List()
   case APP(exp1, exp2) => repetidos(exp1, ligadas) ++ repetidos(exp2, ligadas)
 }
+
 def cambiarRepetidas(lambda: CalculoLambda, libres: List[String], ligadas: List[String]): CalculoLambda = lambda match {
-  case LAMBDA(name, body) if libres.contains(name) && ligadas.contains(name) => LAMBDA(name + "'", cambiarRepetidasLambda(body, libres, ligadas))
-  case LAMBDA(name, body) => LAMBDA(name, cambiarRepetidas(body, libres, ligadas))
+  case LAMBDA(name, body) if libres.contains(name) && ligadas.contains(name) =>
+    val renombre = name + "'"
+    LAMBDA(renombre, cambiarRepetidas(cambiarNombre(body, name, renombre), libres, ligadas :+ renombre))
+  case LAMBDA(name, body) => LAMBDA(name, cambiarRepetidas(body, libres, ligadas :+ name))
   case VAR(name) => VAR(name)
   case APP(exp1, exp2) => APP(cambiarRepetidas(exp1, libres, ligadas), cambiarRepetidas(exp2, libres, ligadas))
-
 }
-def cambiarRepetidasLambda(lambda: CalculoLambda, libres: List[String], ligadas: List[String]): CalculoLambda = lambda match {
-  case LAMBDA(name, body) if libres.contains(name) && ligadas.contains(name) => LAMBDA(name + "'", cambiarRepetidasLambda(body, libres, ligadas))
-  case LAMBDA(name, body) => LAMBDA(name, cambiarRepetidas(body, libres, ligadas))
-  case VAR(name) if libres.contains(name) && ligadas.contains(name) => VAR(name + "'")
+
+def cambiarNombre(lambda: CalculoLambda, viejo: String, original: String): CalculoLambda = lambda match {
+  case VAR(name) if name == viejo => VAR(original)
   case VAR(name) => VAR(name)
-  case APP(exp1, exp2) => APP(cambiarRepetidas(exp1, libres, ligadas), cambiarRepetidas(exp2, libres, ligadas))
-
+  case LAMBDA(name, body) => LAMBDA(name, cambiarNombre(body, viejo, original))
+  case APP(exp1, exp2) => APP(cambiarNombre(exp1, viejo, original), cambiarNombre(exp2, viejo, original))
 }
+
+//Hasta aca anda todo de lujo
+//SI TENGO UNA APP Y DE CADA LADO TENGO VARIABLES REPETIDAS ENTONCES TENGO QUE RENOMBRARLAS
+
 def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
   val (libres, ligadas) = variablesLibres(expresion, List(), List())
   val expSinLigadas = cambiarRepetidas(expresion, libres, ligadas)
   val repCant = repetidos(expSinLigadas, ligadas).groupBy(x => x).filter(_._2.size > 1).map((k, v) => (k, v.length))
   sustitucionAlfa(expSinLigadas, repCant, 0)
 }
-
 
 def sustitucionAlfa(expresion: CalculoLambda, repetidas: Map[String, Int], contador: Int): CalculoLambda = {
   expresion match {
@@ -104,3 +93,13 @@ def actualizarRepetidas(repetidas: Map[String, Int], name: String): Map[String, 
     case 1 => repetidas - name
     case _ => repetidas.updated(name, cantidad - 1)
 }
+
+/*def reductorCallByName(expresion: CalculoLambda) = expresion match {
+  case APP(exp1, exp2) => reemplazarCBN(exp1, exp2)
+}*/
+
+//def reemplazarCBN(exp1: CalculoLambda, exp2: CalculoLambda) = exp1 match{
+//  case LAMBDA(name, body) => reducirBody(name, body, exp2)
+//}
+//
+//def reducirBody(name: String)
