@@ -54,7 +54,7 @@ def cambiarNombre(lambda: CalculoLambda, viejo: String, original: String): Calcu
   case APP(exp1, exp2) => APP(cambiarNombre(exp1, viejo, original), cambiarNombre(exp2, viejo, original))
 }
 
-//Hasta aca anda todo de lujo
+
 //SI TENGO UNA APP Y DE CADA LADO TENGO VARIABLES REPETIDAS ENTONCES TENGO QUE RENOMBRARLAS
 
 def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
