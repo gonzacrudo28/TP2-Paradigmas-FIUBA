@@ -97,11 +97,51 @@ def repetidos(expresion: CalculoLambda, ligadas: List[String]): List[String] = e
   case APP(exp1, exp2) => repetidos(exp1, ligadas) ++ repetidos(exp2, ligadas)
 }
 
+// (λx.x y)-> APP(LAMBDA(x,VAR(x)),VAR(y))
+// ->VAR(y)
+//(λy.(x y) w) -> APP(LAMBDA(y,APP(VAR(x),VAR(y), VAR(w) )
+// -> APP(x w)
+//(λw.λx.(y x) z) -> APP(LAMBDA(w,LAMBDA(x,APP(VAR(y),VAR(x)))),VAR(z))
+//(λw.λx.((y x) w) z) -> APP(LAMBDA(w,LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w)))),VAR(z))
+def reductorCallByName(expresion: CalculoLambda): CalculoLambda = expresion match {
+  case APP(exp1 , exp2) => reducirCallByName(exp1,exp2)
+}
+
+// exp1:LAMBDA(y,APP(VAR(x),VAR(y))    exp2:VAR(w)
+//exp1:LAMBDA(w,LAMBDA(x,APP(VAR(y),VAR(x))))    exp2:VAR(z) 
+//exp1: LAMBDA(w,LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w)))))  exp2: VAR(z))
+def reducirCallByName(exp1 :CalculoLambda,exp2: CalculoLambda) : CalculoLambda = exp1 match {
+  case LAMBDA(variable,expAbs) if expReducibleCBN(variable, expAbs) => reducirCBN(variable,expAbs,exp2)
+  case LAMBDA(variable,expAbs) => expAbs
+  case VAR(_) if exp2 == VAR =>APP(exp1,exp2)
+}
+
+// variableAbs : y     exp: APP(VAR(y),VAR(x))
+// variableAbs: w    exp: LAMBDA(x,APP(VAR(y),VAR(x)))    sale de (λw.λx.(y x) z)
+// variableAbs: w    exp: LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w))) sale de (λw.λx.((y x) w) z)
+def expReducibleCBN(variableAbs : String, exp: CalculoLambda) : Boolean = exp match{
+  case APP(e1,e2) => expReducibleCBN(variableAbs, e1) || expReducibleCBN(variableAbs,e2)
+  case VAR(name) => name == variableAbs
+  case LAMBDA(variable2,APP(f, v))  => expReducibleCBN(variableAbs, v)
+  case _ => false
+}
+//if f == APP
+// y   APP(VAR(x),VAR(y))    VAR(w) 
+// APP entre: y   VAR(x)   VAR(w)  ||  y  VAR(y)   VAR(w)
+// variable:w  exp1:LAMBDA(x,APP(VAR(y),VAR(x)))  exp2:VAR(z)  sale de (λw.λx.(y x) z)
+// variable:w  exp1: LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w))))  exp2:VAR(z)  sale de (λw.λx.((y x) w) z)
+def reducirCBN(variable : String, exp1 : CalculoLambda , exp2 : CalculoLambda) : CalculoLambda = exp1 match{
+  case VAR(name) if name == variable => exp2
+  case VAR(name) => VAR(name)
+  case APP(app1, app2) =>  APP(reducirCBN(variable, app1, exp2),reducirCBN(variable, app2, exp2))
+  case LAMBDA(variable2,APP(exp3,exp4))=> APP(exp3,reducirCBN(variable, exp4, exp2))
+}
+ 
 
 /*def reductorCallByName(expresion: CalculoLambda) = expresion match {
   case APP(exp1, exp2) => reemplazarCBN(exp1, exp2)
-}*/
-
+}
+*/
 //def reemplazarCBN(exp1: CalculoLambda, exp2: CalculoLambda) = exp1 match{
 //  case LAMBDA(name, body) => reducirBody(name, body, exp2)
 //}

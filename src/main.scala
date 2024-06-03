@@ -58,6 +58,8 @@ object Main {
       println("Desparsear Sustitucion: " + desparsear(sustitucionExpresion))
       val variables1 = variablesLibres(sustitucionExpresion, List(), List())
       println("Libres: " + variables1._1 + " Ligadas: " + variables1._2)
+      println("reductor CBN: " + reductorCallByName(sustitucionExpresion))
+
 
       //      val resultado = procesar(expresion)
       //      printf("Resultado = %f \n", resultado)

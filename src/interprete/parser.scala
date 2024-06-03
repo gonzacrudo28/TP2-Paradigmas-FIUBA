@@ -20,7 +20,7 @@ def abstraerExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match{
 }
 
 def aplicarExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match {
-  case Nil => NIL()
+  //case Nil => NIL()
   case VAR(_) :: Nil => lambdas.head
   case x :: xs if x == LPAR() && xs.head == LPAR() =>
     APP(parsear(lambdas.take(buscarSpaceConParentesis(lambdas))), (parsear(lambdas.drop(buscarSpaceConParentesis(lambdas)+1))))
