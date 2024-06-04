@@ -41,17 +41,19 @@ def buscarSpaceConParentesis(expresion : List[CalculoLambda], contadorEspacio : 
 }
 
 def desparsear(expresion: CalculoLambda) : String = expresion match {
-    case VAR(name) => name
-    case LAMBDA(name,exp) => "λ" + name + "." + desparsear(exp)
-    case APP(exp1,exp2) => "(" +    desparsear(exp1)  + " " + desparsear(exp2) + ")"
-    case _ => ""
+  case VAR(name) => name
+  case LAMBDA(name,exp) => "λ" + name + "." + desparsear(exp)
+  case APP(exp1,exp2) => "(" +    desparsear(exp1)  + " " + desparsear(exp2) + ")"
+  case _ => ""
 }
+// APP(VAR(y),VAR(x))
+// LAMBDA(x,APP(VAR(y),VAR(x)))   
+// LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w))) 
+def desparsearAST(arbol: String): String ={
+  val arbolSplit = arbol.split("APP")
+  print(arbolSplit)
+  arbol
 
 
 
-
-
-
-
-
-
+}

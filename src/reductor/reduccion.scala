@@ -1,6 +1,7 @@
 package reductor
 
 import modelo._
+import interprete._
 
 
 def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
@@ -46,6 +47,10 @@ def cambiarNombre(lambda: CalculoLambda, viejo: String, original: String): Calcu
   case APP(exp1, exp2) => APP(cambiarNombre(exp1, viejo, original), cambiarNombre(exp2, viejo, original))
 }
 
+
+
+
+
 def libresSust(expresion: CalculoLambda, hashLibres: Map[String, Int]): CalculoLambda = expresion match {
   case LAMBDA(name, body) => LAMBDA(name, libresSust(body, hashLibres))
   case VAR(name) if hashLibres.getOrElse(name, 0) >= 2 =>
@@ -73,49 +78,51 @@ def actualizoHash(exp: CalculoLambda, hashLibres: Map[String, Int]): Map[String,
   case _ => hashLibres
 }
 
-
-
-//REDUCCION
-
-
 // (λx.x y)-> APP(LAMBDA(x,VAR(x)),VAR(y))
 // ->VAR(y)
 //(λy.(x y) w) -> APP(LAMBDA(y,APP(VAR(x),VAR(y), VAR(w) )
 // -> APP(x w)
 //(λw.λx.(y x) z) -> APP(LAMBDA(w,LAMBDA(x,APP(VAR(y),VAR(x)))),VAR(z))
 //(λw.λx.((y x) w) z) -> APP(LAMBDA(w,LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w)))),VAR(z))
-//(λx.λy.y (λx.(x x) λx.(x x)))
+//λx.((y x) w)
+//(λx.λz.x y)
 def reductorCallByName(expresion: CalculoLambda): CalculoLambda = expresion match {
   case APP(exp1 , exp2) => reducirCallByName(exp1,exp2)
-  case LAMBDA(arg, body) => reductorCallByName(body)
-  case VAR(name) => VAR(name)
+  case LAMBDA(arg, body) => LAMBDA(arg,reductorCallByName(body))
+  case VAR(name) => expresion
 }
 
 // exp1:LAMBDA(y,APP(VAR(x),VAR(y))    exp2:VAR(w)
 //exp1:LAMBDA(w,LAMBDA(x,APP(VAR(y),VAR(x))))    exp2:VAR(z) 
 //exp1: LAMBDA(w,LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w)))))  exp2: VAR(z))
-//(λx.λy.y (λx.(x x) λx.(x x)))
+//exp1: (y x)    exp2: w
+//e1 λx.λz.x   e2 y
 def reducirCallByName(exp1 :CalculoLambda,exp2: CalculoLambda) : CalculoLambda = exp1 match {
   case LAMBDA(variable,expAbs) if expReducibleCBN(variable, expAbs) => reducirCBN(variable,expAbs,exp2)
   case LAMBDA(variable,expAbs) => expAbs
+  case APP(a,b) => APP(exp1,exp2)
+
   case VAR(_) if exp2 == VAR =>APP(exp1,exp2)
 }
 
 // variableAbs : y     exp: APP(VAR(y),VAR(x))
 // variableAbs: w    exp: LAMBDA(x,APP(VAR(y),VAR(x)))    sale de (λw.λx.(y x) z)
 // variableAbs: w    exp: LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w))) sale de (λw.λx.((y x) w) z)
-//(λx.λy.y (λx.(x x) λx.(x x)))
+//variableAbs x   exp λz.x
 def expReducibleCBN(variableAbs : String, exp: CalculoLambda) : Boolean = exp match{
   case APP(e1,e2) => expReducibleCBN(variableAbs, e1) || expReducibleCBN(variableAbs,e2)
   case VAR(name) => name == variableAbs
   case LAMBDA(variable2,APP(f, v))  => expReducibleCBN(variableAbs, v)
+  case LAMBDA(variable2,expAbs) => expReducibleCBN(variableAbs, expAbs)
   case _ => false
 }
+
 //if f == APP
 // y   APP(VAR(x),VAR(y))    VAR(w) 
 // APP entre: y   VAR(x)   VAR(w)  ||  y  VAR(y)   VAR(w)
 // variable:w  exp1:LAMBDA(x,APP(VAR(y),VAR(x)))  exp2:VAR(z)  sale de (λw.λx.(y x) z)
 // variable:w  exp1: LAMBDA(x,APP(APP(VAR(y),VAR(x)),VAR(w))))  exp2:VAR(z)  sale de (λw.λx.((y x) w) z)
+//
 def reducirCBN(variable : String, exp1 : CalculoLambda , exp2 : CalculoLambda) : CalculoLambda = exp1 match{
   case VAR(name) if name == variable => exp2
   case VAR(name) => VAR(name)
@@ -123,25 +130,32 @@ def reducirCBN(variable : String, exp1 : CalculoLambda , exp2 : CalculoLambda) :
   case LAMBDA(variable2,APP(exp3,exp4))=> APP(exp3,reducirCBN(variable, exp4, exp2))
 }
 
-
-
-// REDUCCION CALL BY VALUE
-
-def detectorRecursionInfinita(expresion: CalculoLambda, maximosPasos: Int): CalculoLambda = maximosPasos match{
-  case maximosPasos if maximosPasos > 0 => reductorCallByValue(expresion)
-  case maximosPasos if maximosPasos <=0 => 
-    println("Recursion infinita")
-    expresion
+def reductorCallByValue(expresion: CalculoLambda, limiteRecursion: Int): String = {
+  val reducida = wrapperCallByValue(expresion, limiteRecursion)
+  reducida match {
+    case NIL() => "Recursion Infinita"
+    case _ => desparsear(reducida)
+  }
 }
-def reductorCallByValue(expresion: CalculoLambda): CalculoLambda = expresion match {
-  case APP(e1, e2) =>
-    val e1reducida = reductorCallByValue(e1)
-    val e2reducida = reductorCallByValue(e2)
-    e1reducida match {
-      case LAMBDA(arg, body) => reductorCallByValue(sustituir(body, arg, e2reducida))
-      case _ => APP(e1reducida, e2reducida)
+
+def wrapperCallByValue(expresion: CalculoLambda, limiteRecursion: Int): CalculoLambda = limiteRecursion match {
+
+  case limiteRecursion if limiteRecursion > 0 =>
+    print(limiteRecursion)
+    expresion match {
+
+      case APP(e1, e2) =>
+        val e1reducida = wrapperCallByValue(e1, limiteRecursion - 1)
+
+        val e2reducida = wrapperCallByValue(e2, limiteRecursion - 1)
+        e1reducida match {
+          case LAMBDA(arg, body) => wrapperCallByValue(sustituir(body, arg, e2reducida), limiteRecursion - 1)
+          case _ => APP(e1reducida, e2reducida)
+        }
+      case _ => expresion
     }
-  case _ => expresion
+  case _ => NIL()
+
 }
 
 def sustituir(body: CalculoLambda, arg: String, sustituto: CalculoLambda): CalculoLambda = body match {
@@ -152,8 +166,9 @@ def sustituir(body: CalculoLambda, arg: String, sustituto: CalculoLambda): Calcu
   case other => other
 }
 
-/* (λx.λy.x y)
+/*
+(λx.λy.x y)
 (λf.(f λx.λy.x) ((λx.λy.λf.((f x) y) a) b))
 (λx.λx.(y x) z)
 (λx.λy.y (λx.(x x) λx.(x x)))
-* */
+ */
