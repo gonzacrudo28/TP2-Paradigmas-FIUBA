@@ -14,7 +14,7 @@ object Main {
   def main(args: Array[String]) = {
     print("Ingrese su expresion o setear nueva configuracion: ")
     var input: String = readLine
-    val limiteRecursion = 100
+    val limiteRecursion = 10
     var estado = CBN
     val listaPrueba = List[String](
       "λx.((x y) λz.(x z))",
@@ -29,8 +29,6 @@ object Main {
       "λx.λy.λf.((((f x) y) a) b)",
       "(λx.λy.(x y) (y x))",
       "((λx.λy.(x y) (y x)) (x y))")
-
-
     var expresion = ""
     while (input != "exit") {
       input match {
@@ -50,11 +48,12 @@ object Main {
               val variables = variablesLibres(expresionParseada, List(), List())
               println("Libres: " + variables._1)
             case CBV =>
-              println("Expresion: " + reductorCallByValue(expresionParseada,limiteRecursion))
+
+              println(desparsearExpresion(reductorCallByValue(expresionParseada)))
             case CBN =>
             //println("Expresion: " + reductorCallByName(expresionParseada))
           }
-        case _ => println("Expresion: " + desparsearAST(input))
+        case _ => println("Expresion: ")
       }
 
       //      val ecuacionParseada = leerCalculoLambda(input)
@@ -72,3 +71,4 @@ object Main {
       print("Ingrese su expresion o setear nueva configuracion: ")
       input = readLine
     }}}
+
