@@ -12,6 +12,7 @@ import scala.io.StdIn.readLine
 
 object Main {
   def main(args: Array[String]) = {
+    print("Ingrese su expresion o setear nueva configuracion: ")
     var input: String = readLine
     val estado = CBN
     val listaPrueba = List[String](
@@ -31,6 +32,7 @@ object Main {
 
     var expresion = ""
     while (input != "exit") {
+
       //     input match {
       //        case "set free-variables" => estado = FV
       //        case "set call-by-value" => estado = CBV
@@ -44,6 +46,7 @@ object Main {
 
       val ecuacionParseada = leerCalculoLambda(input)
       val expresion = parsear(ecuacionParseada)
+      println(expresion)
       val variables = variablesLibres(expresion, List(), List())
       println("Libres: " + variables._1 + " Ligadas: " + variables._2)
       val sustitucionExpresion = conversionAlfa(expresion)
@@ -53,6 +56,7 @@ object Main {
         println("Nuevas libres: " + variables1._1 + " Nuevas ligadas: " + variables1._2)
       }
       //println("reductor CBN: " + reductorCallByName(sustitucionExpresion))
+      print("Ingrese su expresion o setear nueva configuracion: ")
       input = readLine
     }}}
 

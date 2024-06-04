@@ -2,16 +2,16 @@ package reductor
 
 import modelo._
 
-//("VARIABLES" + variablesLibres1(LAMBDA("f", LAMBDA("x", APP(APP(VAR("y"), VAR("y")), VAR("z"))))))
-//ME FALTA EL CASO DONDE HAY VARIABLE DOS VECES UNA LIBRE Y OTRA LIGADA
 
-val libres = List()
-val ligadas = List()
+def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
+  val expLigadas = sustitucion(expresion)
+  val (libres, ligadas) = variablesLibres(expLigadas, List(), List())
+  val hashLibres = libres.groupBy(x => x).filter(_._2.size > 1).map((k, v) => (k, v.length))
+  println(hashLibres)
+  libresSust(expLigadas, hashLibres)
 
-//println("REPETIDOS λx.x -> " + conversionAlfa(LAMBDA("x",VAR("x"))))
-//println("REPETIDOS λx.λx.x -> " + conversionAlfa(LAMBDA("x",LAMBDA("x",VAR("x")))))
-//println("x(λz.(x (λw.((w z) y)))) ------->" + conversionAlfa(APP(VAR("x"),LAMBDA("z",APP(VAR("x"),LAMBDA("w",APP(APP(VAR("w"),VAR("z")),VAR("y"))))))))
-//println("(λy.(x y) y) ------->" + conversionAlfa(APP(LAMBDA("y", APP(VAR("x"), VAR("y"))), VAR("y"))))
+}
+
 
 def variablesLibres(expresion: CalculoLambda, libres: List[String], ligadas: List[String]): (List[String], List[String]) = expresion match {
   case LAMBDA(name, body) =>
@@ -48,20 +48,7 @@ def cambiarNombre(lambda: CalculoLambda, viejo: String, original: String): Calcu
 }
 
 
-//SI TENGO UNA APP Y DE CADA LADO TENGO VARIABLES REPETIDAS ENTONCES TENGO QUE RENOMBRARLAS
-//LO QUE HAGO ES BUSCAR LAS LIBRES Y LIGADAS DE CADA LADO DE LA APP Y LAS UNO EN UNA LISTA, SI HAY REPETIDAS
-//RENOMBRO UNA DE ELLAS
 
-
-
-def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
-  val expLigadas = sustitucion(expresion)
-  val (libres, ligadas) = variablesLibres(expLigadas, List(), List())
-  val hashLibres = libres.groupBy(x => x).filter(_._2.size > 1).map((k, v) => (k, v.length))
-  println(hashLibres)
-  libresSust(expLigadas,hashLibres)
-
-}
 
 
 def libresSust(expresion: CalculoLambda, hashLibres: Map[String, Int]): CalculoLambda = expresion match {
