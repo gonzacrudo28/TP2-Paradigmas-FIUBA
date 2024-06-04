@@ -17,54 +17,42 @@ object Main {
     val listaPrueba = List[String](
       "λx.((x y) λz.(x z))",
       "(x λz.(x λw.((w z) y)))",
+      "(λx.λy.y (λx.(x x) λx.(x x)))",
       "λy.((x y) y)",
+      "(λy.(x y) y)",
       "λx.x",
       "λx.λx.x",
-      "λx.λx.λx.x",
-      "λx.λx.λx.λx.x",
       "λf.λx.(f y)",
       "λf.λx.((y x) z)",
-      "(λy.(x y) y)",
       "λx.λy.λf.((((f x) y) a) b)",
       "(λx.λy.(x y) (y x))",
       "((λx.λy.(x y) (y x)) (x y))")
-    //     val listaConversion = List[String](
-    //       ""
-    //     )
+
 
     var expresion = ""
-    //var expresionParseada = CalculoLambda()
     while (input != "exit") {
- //     input match {
-//        case "set free-variables" => estado = FV
-//        case "set call-by-value" => estado = CBV
-//        case "set call-by-name" => estado = CBN
-//        case x if x.contains('λ') =>
-//          expresionParseada = parsear(leerCalculoLambda(input))
-//          println("Expresion: " + expresionParseada)
-//        case _ =>
-          //println("Expresion: " + desparsear(CalculoLambda(input)))
-//      }
+      //     input match {
+      //        case "set free-variables" => estado = FV
+      //        case "set call-by-value" => estado = CBV
+      //        case "set call-by-name" => estado = CBN
+      //        case x if x.contains('λ') =>
+      //          expresionParseada = parsear(leerCalculoLambda(input))
+      //          println("Expresion: " + expresionParseada)
+      //        case _ =>
+      //println("Expresion: " + desparsear(CalculoLambda(input)))
+      //      }
 
       val ecuacionParseada = leerCalculoLambda(input)
-      println("Expresion" + ecuacionParseada)
       val expresion = parsear(ecuacionParseada)
-      println("Parsear:  " + expresion)
-      println("Desparsear " + desparsear(expresion))
       val variables = variablesLibres(expresion, List(), List())
       println("Libres: " + variables._1 + " Ligadas: " + variables._2)
-      val sustitucionExpresion = sustitucion(expresion)
-      println("Sustitucion: " + sustitucionExpresion)
-      println("Desparsear Sustitucion: " + desparsear(sustitucionExpresion))
+      val sustitucionExpresion = conversionAlfa(expresion)
+      println("Sustitucion: " + desparsear(sustitucionExpresion))
       val variables1 = variablesLibres(sustitucionExpresion, List(), List())
-      println("Libres: " + variables1._1 + " Ligadas: " + variables1._2)
-      println("reductor CBN: " + reductorCallByName(sustitucionExpresion))
-
-
-      //      val resultado = procesar(expresion)
-      //      printf("Resultado = %f \n", resultado)
-
+      if (variables1 != variables){
+        println("Nuevas libres: " + variables1._1 + " Nuevas ligadas: " + variables1._2)
+      }
+      //println("reductor CBN: " + reductorCallByName(sustitucionExpresion))
       input = readLine
-    }
-}
-}
+    }}}
+
