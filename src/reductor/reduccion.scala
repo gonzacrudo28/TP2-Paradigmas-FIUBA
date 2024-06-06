@@ -77,10 +77,29 @@ def actualizoHash(exp: CalculoLambda, hashLibres: Map[String, Int]): Map[String,
     hashLibres.updated(name, cant - 1)
   case _ => hashLibres
 }
-def reductorCallByName(expresion: CalculoLambda): CalculoLambda = expresion match {
-  case APP(exp1 , exp2) => reducirCallByName(exp1,exp2)
-  case LAMBDA(arg, body) => LAMBDA(arg,reductorCallByName(body))
+
+def wrapperReductorCallByName(expresion: CalculoLambda): CalculoLambda = expresion match {
+  case APP(exp1, exp2) => reducirCallByName(exp1, exp2)
+  case LAMBDA(arg, body) => LAMBDA(arg, wrapperReductorCallByName(body))
   case VAR(name) => expresion
+}
+//1=λf.(f λx.λy.x) 2=((λx.λy.λf.((f x) y) a) b)
+def reducirCallByName(exp1: CalculoLambda, exp2: CalculoLambda): CalculoLambda = exp1 match {
+  case LAMBDA(variable, expAbs) => convertirExp(variable, exp2, expAbs)
+  case APP(a1, a2) => APP(reducirCallByName(a1, a2), exp2)
+  case VAR(a) => APP(exp1, wrapperReductorCallByName(exp2))
+}
+//1=f  2=(f λx.λy.x) 3=((λx.λy.λf.((f x) y) a) b) -> (((λx.λy.λf.((f x) y) a) b) λx.λy.x)
+def convertirExp(variable: String, param: CalculoLambda, exp: CalculoLambda): CalculoLambda = exp match {
+  case VAR(name) if name == variable => param
+  case VAR(name) => exp
+  case APP(a1, a2) =>  wrapperReductorCallByName(APP(convertirExp(variable,param,a1), convertirExp(variable,param,a2)))
+  case LAMBDA(variable2,expAbs) if variable2 == variable => exp
+  case LAMBDA(variable2, expAbs) => LAMBDA(variable2, convertirExp(variable, param, expAbs))
+}
+
+def reductorCallByName(expresion: CalculoLambda): String = {
+  desparsearExpresion(wrapperReductorCallByName(expresion))
 }
 
 def reductorCallByValue(expresion: CalculoLambda): CalculoLambda = expresion match{

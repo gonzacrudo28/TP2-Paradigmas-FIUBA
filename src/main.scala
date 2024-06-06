@@ -51,7 +51,7 @@ object Main {
 
               println(desparsearExpresion(reductorCallByValue(expresionParseada)))
             case CBN =>
-            //println("Expresion: " + reductorCallByName(expresionParseada))
+            println("Expresion: " + reductorCallByName(expresionParseada))
           }
         case _ => println("Expresion: ")
       }
