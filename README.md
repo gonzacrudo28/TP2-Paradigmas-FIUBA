@@ -18,6 +18,5 @@
  </li> 
 </ol>
 
-### Consideraciones:
 
 
