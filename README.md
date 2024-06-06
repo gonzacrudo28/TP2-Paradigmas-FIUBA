@@ -5,7 +5,7 @@
 <ol>
   <li>
       
-    git clonegit@github.com:ngraeff/TP2paradigmas.git
+    git clone git@github.com:ngraeff/TP2paradigmas.git
     
   </li>
   <li>      
