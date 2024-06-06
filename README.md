@@ -10,7 +10,8 @@
   </li>
   <li>      
 
-    cd TPparadigmas 
+    cd TP2paradigmas
+
  </li> 
  <li>      
 
