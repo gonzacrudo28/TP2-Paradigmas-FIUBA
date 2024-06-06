@@ -48,9 +48,6 @@ def cambiarNombre(lambda: CalculoLambda, viejo: String, original: String): Calcu
 }
 
 
-
-
-
 def libresSust(expresion: CalculoLambda, hashLibres: Map[String, Int]): CalculoLambda = expresion match {
   case LAMBDA(name, body) => LAMBDA(name, libresSust(body, hashLibres))
   case VAR(name) if hashLibres.getOrElse(name, 0) >= 2 =>
@@ -58,7 +55,7 @@ def libresSust(expresion: CalculoLambda, hashLibres: Map[String, Int]): CalculoL
     val updatedMap = hashLibres.updated(name, cant - 1)
     libresSust(VAR(name + "'" * cant), updatedMap)
   case VAR(name) => VAR(name)
-  case APP(exp1, exp2) => //Si mando los dos a la vez el hash no se me actualiza
+  case APP(exp1, exp2) => 
     val nExp = reemplazarExp(exp1, hashLibres)
     val hashLibres1 = actualizoHash(exp1, hashLibres)
     APP(nExp, libresSust(exp2, hashLibres1))
@@ -83,13 +80,13 @@ def wrapperReductorCallByName(expresion: CalculoLambda): CalculoLambda = expresi
   case LAMBDA(arg, body) => LAMBDA(arg, wrapperReductorCallByName(body))
   case VAR(name) => expresion
 }
-//1=λf.(f λx.λy.x) 2=((λx.λy.λf.((f x) y) a) b)
+
 def reducirCallByName(exp1: CalculoLambda, exp2: CalculoLambda): CalculoLambda = exp1 match {
   case LAMBDA(variable, expAbs) => convertirExp(variable, exp2, expAbs)
   case APP(a1, a2) => APP(reducirCallByName(a1, a2), exp2)
   case VAR(a) => APP(exp1, wrapperReductorCallByName(exp2))
 }
-//1=f  2=(f λx.λy.x) 3=((λx.λy.λf.((f x) y) a) b) -> (((λx.λy.λf.((f x) y) a) b) λx.λy.x)
+
 def convertirExp(variable: String, param: CalculoLambda, exp: CalculoLambda): CalculoLambda = exp match {
   case VAR(name) if name == variable => param
   case VAR(name) => exp
@@ -99,7 +96,13 @@ def convertirExp(variable: String, param: CalculoLambda, exp: CalculoLambda): Ca
 }
 
 def reductorCallByName(expresion: CalculoLambda): String = {
-  desparsearExpresion(wrapperReductorCallByName(expresion))
+  val r1 = wrapperReductorCallByName(expresion)
+  val r2 = wrapperReductorCallByName(r1)
+
+  r2 match {
+    case _ if r1 == r2 => desparsearExpresion(r1)
+    case _ => reductorCallByName(r2)
+  }
 }
 
 def reductorCallByValue(expresion: CalculoLambda): CalculoLambda = expresion match{
