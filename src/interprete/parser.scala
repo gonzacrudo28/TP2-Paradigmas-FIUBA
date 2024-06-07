@@ -5,7 +5,6 @@ import modelo.*
 import scala.annotation.tailrec
 import scala.collection.mutable.Stack
 
-//PARSER LISTO, LA UNICA FORMA DE QUE ROMPA ES QUE NO HAYA UNA EXPRESION VALIDA
 def parsear(tokens: List[CalculoLambda]): CalculoLambda = tokens match {
   case Nil => NIL()
   case x :: xs if x == LAMBDAstr() => abstraerExp(tokens)
@@ -18,7 +17,6 @@ def abstraerExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match{
   case _ => NIL()
 }
 def aplicarExp(lambdas: List[CalculoLambda]): CalculoLambda = lambdas match {
-  //case Nil => NIL()
   case VAR(_) :: Nil => lambdas.head
   case x :: xs if x == LPAR() && xs.head == LPAR() =>
     APP(parsear(lambdas.take(buscarSpaceConParentesis(lambdas))), (parsear(lambdas.drop(buscarSpaceConParentesis(lambdas)+1))))

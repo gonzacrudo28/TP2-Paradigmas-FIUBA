@@ -9,9 +9,7 @@ def conversionAlfa(expresion: CalculoLambda): CalculoLambda = {
   val (libres, ligadas) = variablesLibres(expLigadas, List(), List())
   val hashLibres = libres.groupBy(x => x).filter(_._2.size > 1).map((k, v) => (k, v.length))
   libresSust(expLigadas, hashLibres)
-
 }
-
 
 def variablesLibres(expresion: CalculoLambda, libres: List[String], ligadas: List[String]): (List[String], List[String]) = expresion match {
   case LAMBDA(name, body) =>
@@ -75,6 +73,16 @@ def actualizoHash(exp: CalculoLambda, hashLibres: Map[String, Int]): Map[String,
   case _ => hashLibres
 }
 
+def reductorCallByName(expresion: CalculoLambda): String = {
+  val r1 = wrapperReductorCallByName(expresion)
+  val r2 = wrapperReductorCallByName(r1)
+
+  r2 match {
+    case _ if r1 == r2 => desparsearExpresion(r1)
+    case _ => reductorCallByName(r2)
+  }
+}
+
 def wrapperReductorCallByName(expresion: CalculoLambda): CalculoLambda = expresion match {
   case APP(exp1, exp2) => reducirCallByName(exp1, exp2)
   case LAMBDA(arg, body) => LAMBDA(arg, wrapperReductorCallByName(body))
@@ -93,16 +101,6 @@ def convertirExp(variable: String, param: CalculoLambda, exp: CalculoLambda): Ca
   case APP(a1, a2) =>  wrapperReductorCallByName(APP(convertirExp(variable,param,a1), convertirExp(variable,param,a2)))
   case LAMBDA(variable2,expAbs) if variable2 == variable => exp
   case LAMBDA(variable2, expAbs) => LAMBDA(variable2, convertirExp(variable, param, expAbs))
-}
-
-def reductorCallByName(expresion: CalculoLambda): String = {
-  val r1 = wrapperReductorCallByName(expresion)
-  val r2 = wrapperReductorCallByName(r1)
-
-  r2 match {
-    case _ if r1 == r2 => desparsearExpresion(r1)
-    case _ => reductorCallByName(r2)
-  }
 }
 
 def reductorCallByValue(expresion: CalculoLambda): CalculoLambda = expresion match{

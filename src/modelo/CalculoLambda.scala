@@ -16,7 +16,6 @@ case class LPAR() extends CalculoLambda
 
 case class RPAR() extends CalculoLambda
 
-
 case class APP(f: CalculoLambda, v: CalculoLambda) extends CalculoLambda
 
 case class NIL() extends CalculoLambda
