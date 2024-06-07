@@ -30,14 +30,14 @@
   set call-by-name  --> Setear para call-by-name
 
 ### Ingresos del programa:
-  
+
   Se puede ingresar:
-
-    Comandos
-
-    Ecuaciones Lambda --> Por ejemplo : (λx.λy.x y)
-
-    AST --> Por ejemplo : APP(VAR(x),VAR(y))    
+  
+  Comandos
+  
+  Ecuaciones Lambda --> Por ejemplo : (λx.λy.x y)
+  
+  AST --> Por ejemplo : APP(VAR(x),VAR(y))    
 
 ### Consideraciones de uso:
 
